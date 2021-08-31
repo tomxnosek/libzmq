@@ -53,6 +53,9 @@
 #endif
 
 #include <direct.h>
+
+#define rmdir _rmdir
+#define unlink _unlink
 #endif
 
 #if defined ZMQ_HAVE_OPENVMS || defined ZMQ_HAVE_VXWORKS
@@ -224,6 +227,16 @@ void zmq::set_ip_type_of_service (fd_t s_, int iptos_)
     if (rc == -1) {
         errno_assert (errno == ENOPROTOOPT || errno == EINVAL);
     }
+#endif
+}
+
+void zmq::set_socket_priority (fd_t s_, int priority_)
+{
+#ifdef ZMQ_HAVE_SO_PRIORITY
+    int rc =
+      setsockopt (s_, SOL_SOCKET, SO_PRIORITY,
+                  reinterpret_cast<char *> (&priority_), sizeof (priority_));
+    errno_assert (rc == 0);
 #endif
 }
 
@@ -559,6 +572,10 @@ int zmq::make_fdpair (fd_t *r_, fd_t *w_)
 #ifdef ZMQ_HAVE_IPC
     ipc_address_t address;
     std::string dirname, filename;
+    sockaddr_un lcladdr;
+    socklen_t lcladdr_len = sizeof lcladdr;
+    int rc = 0;
+    int saved_errno = 0;
 
     //  Create a listening socket.
     const SOCKET listener = open_socket (AF_UNIX, SOCK_STREAM, 0);
@@ -570,7 +587,7 @@ int zmq::make_fdpair (fd_t *r_, fd_t *w_)
     create_ipc_wildcard_address (dirname, filename);
 
     //  Initialise the address structure.
-    int rc = address.resolve (filename.c_str ());
+    rc = address.resolve (filename.c_str ());
     if (rc != 0) {
         goto error_closelistener;
     }
@@ -589,9 +606,6 @@ int zmq::make_fdpair (fd_t *r_, fd_t *w_)
         errno = wsa_error_to_errno (WSAGetLastError ());
         goto error_closelistener;
     }
-
-    sockaddr_un lcladdr;
-    socklen_t lcladdr_len = sizeof lcladdr;
 
     rc = getsockname (listener, reinterpret_cast<struct sockaddr *> (&lcladdr),
                       &lcladdr_len);
@@ -618,10 +632,20 @@ int zmq::make_fdpair (fd_t *r_, fd_t *w_)
     rc = closesocket (listener);
     wsa_assert (rc == 0);
 
+    //  Cleanup temporary socket file descriptor
+    if (!filename.empty ()) {
+        rc = ::unlink (filename.c_str ());
+        if ((rc == 0) && !dirname.empty ()) {
+            rc = ::rmdir (dirname.c_str ());
+            dirname.clear ();
+        }
+        filename.clear ();
+    }
+
     return 0;
 
 error_closeclient:
-    int saved_errno = errno;
+    saved_errno = errno;
     rc = closesocket (*w_);
     wsa_assert (rc == 0);
     errno = saved_errno;
@@ -630,6 +654,17 @@ error_closelistener:
     saved_errno = errno;
     rc = closesocket (listener);
     wsa_assert (rc == 0);
+
+    //  Cleanup temporary socket file descriptor
+    if (!filename.empty ()) {
+        rc = ::unlink (filename.c_str ());
+        if ((rc == 0) && !dirname.empty ()) {
+            rc = ::rmdir (dirname.c_str ());
+            dirname.clear ();
+        }
+        filename.clear ();
+    }
+
     errno = saved_errno;
 
     return -1;
@@ -833,24 +868,48 @@ void zmq::assert_success_or_recoverable (zmq::fd_t s_, int rc_)
 }
 
 #ifdef ZMQ_HAVE_IPC
+
+#if defined ZMQ_HAVE_WINDOWS
+char *widechar_to_utf8 (const wchar_t *widestring)
+{
+    int nch, n;
+    char *utf8 = 0;
+    nch = WideCharToMultiByte (CP_UTF8, 0, widestring, -1, 0, 0, NULL, NULL);
+    if (nch > 0) {
+        utf8 = (char *) malloc ((nch + 1) * sizeof (char));
+        n = WideCharToMultiByte (CP_UTF8, 0, widestring, -1, utf8, nch, NULL,
+                                 NULL);
+        utf8[nch] = 0;
+    }
+    return utf8;
+}
+#endif
+
 int zmq::create_ipc_wildcard_address (std::string &path_, std::string &file_)
 {
 #if defined ZMQ_HAVE_WINDOWS
-    char buffer[MAX_PATH];
+    wchar_t buffer[MAX_PATH];
 
     {
-        const errno_t rc = tmpnam_s (buffer);
+        const errno_t rc = _wtmpnam_s (buffer);
         errno_assert (rc == 0);
     }
 
     // TODO or use CreateDirectoryA and specify permissions?
-    const int rc = _mkdir (buffer);
+    const int rc = _wmkdir (buffer);
     if (rc != 0) {
         return -1;
     }
 
-    path_.assign (buffer);
+    char *tmp = widechar_to_utf8 (buffer);
+    if (tmp == 0) {
+        return -1;
+    }
+
+    path_.assign (tmp);
     file_ = path_ + "/socket";
+
+    free (tmp);
 #else
     std::string tmp_path;
 

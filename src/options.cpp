@@ -206,6 +206,7 @@ zmq::options_t::options_t () :
     sndbuf (-1),
     rcvbuf (-1),
     tos (0),
+    priority (0),
     type (-1),
     linger (-1),
     connect_timeout (0),
@@ -253,7 +254,10 @@ zmq::options_t::options_t () :
     hello_msg (),
     can_send_hello_msg (false),
     disconnect_msg (),
-    can_recv_disconnect_msg (false)
+    can_recv_disconnect_msg (false),
+    hiccup_msg (),
+    can_recv_hiccup_msg (false),
+    busy_poll (0)
 {
     memset (curve_public_key, 0, CURVE_KEYSIZE);
     memset (curve_secret_key, 0, CURVE_KEYSIZE);
@@ -801,6 +805,12 @@ int zmq::options_t::setsockopt (int option_,
             }
             break;
 
+        case ZMQ_BUSY_POLL:
+            if (is_int) {
+                busy_poll = value;
+                return 0;
+            }
+            break;
 #ifdef ZMQ_HAVE_WSS
         case ZMQ_WSS_KEY_PEM:
             // TODO: check if valid certificate
@@ -843,6 +853,25 @@ int zmq::options_t::setsockopt (int option_,
             }
 
             return 0;
+
+        case ZMQ_PRIORITY:
+            if (is_int && value >= 0) {
+                priority = value;
+                return 0;
+            }
+            break;
+
+        case ZMQ_HICCUP_MSG:
+            if (optvallen_ > 0) {
+                unsigned char *bytes = (unsigned char *) optval_;
+                hiccup_msg =
+                  std::vector<unsigned char> (bytes, bytes + optvallen_);
+            } else {
+                hiccup_msg = std::vector<unsigned char> ();
+            }
+
+            return 0;
+
 
 #endif
 
@@ -1268,6 +1297,19 @@ int zmq::options_t::getsockopt (int option_,
             if (is_int) {
                 *value = out_batch_size;
                 return 0;
+            }
+            break;
+
+        case ZMQ_PRIORITY:
+            if (is_int) {
+                *value = priority;
+                return 0;
+            }
+            break;
+
+        case ZMQ_BUSY_POLL:
+            if (is_int) {
+                *value = busy_poll;
             }
             break;
 #endif

@@ -52,9 +52,10 @@ AC_SUBST(PACKAGE_VERSION)
 # ZeroMQ version 4.3.2: 7:2:2 (ABI version 5)
 # ZeroMQ version 4.3.3: 7:3:2 (ABI version 5)
 # ZeroMQ version 4.3.4: 7:4:2 (ABI version 5)
+# ZeroMQ version 4.3.5: 7:5:2 (ABI version 5)
 #
 # libzmq -version-info current:revision:age
-LTVER="7:4:2"
+LTVER="7:5:2"
 AC_SUBST(LTVER)
 
 # Take a copy of original flags
@@ -64,7 +65,7 @@ ZMQ_ORIG_CXXFLAGS="${CXXFLAGS:-none}"
 
 # Checks for programs.
 AC_PROG_CC
-AX_CHECK_COMPILE_FLAG([-std=gnu11], [CFLAGS+=" -std=gnu11"], [AC_PROG_CC_C99])
+AX_CHECK_COMPILE_FLAG([-std=c11], [CFLAGS+=" -std=c11"], [AC_PROG_CC_C99])
 AC_PROG_CXX
 AX_CODE_COVERAGE
 AM_PROG_CC_C_O
@@ -549,6 +550,20 @@ AS_IF([test "x$with_libsodium" = "xyes"], [
 AC_ARG_ENABLE([curve],
     [AS_HELP_STRING([--disable-curve], [disable CURVE security [default=no]])])
 
+AC_ARG_ENABLE(
+    [libsodium_randombytes_close],
+    [AS_HELP_STRING(
+        [--disable-libsodium_randombytes_close],
+        [Do not call libsodium randombytes_close() when terminating contexts.
+        If disabled, may leave one FD open on /dev/urandom
+        until randombytes_close() is called explicitly,
+        but fixes a crash when multiple contexts are used with CURVE.
+        Has no effect when getrandom() is available. [default=enabled]]
+    )],
+    [],
+    [enable_libsodium_randombytes_close=yes]
+)
+
 if test "x$enable_curve" = "xno"; then
     curve_library=""
     AC_MSG_NOTICE([CURVE security is disabled])
@@ -557,6 +572,12 @@ elif test "x$with_libsodium" = "xyes"; then
     AC_MSG_NOTICE([Using libsodium for CURVE security])
     AC_DEFINE(ZMQ_HAVE_CURVE, [1], [Using curve encryption])
     AC_DEFINE(ZMQ_USE_LIBSODIUM, [1], [Using libsodium for curve encryption])
+    if test "x$enable_libsodium_randombytes_close" = "xyes"; then
+        AC_DEFINE(ZMQ_LIBSODIUM_RANDOMBYTES_CLOSE, [1], [Automatically close libsodium randombytes. Not threadsafe without getrandom()])
+    else
+        AC_MSG_NOTICE([Disabling libsodium randombytes_close(). randombytes_close() may need to be called in applcation code.])
+    fi
+
     curve_library="libsodium"
     enable_curve="yes"
 
@@ -788,6 +809,25 @@ AC_COMPILE_IFELSE(
 		AC_MSG_RESULT([no])
 ])
 
+AC_MSG_CHECKING([whether if_nametoindex is available])
+AC_COMPILE_IFELSE(
+    [AC_LANG_PROGRAM([[
+        #ifdef _WIN32
+        #include <iphlpapi.h>
+        #else
+        #include <sys/types.h>
+        #include <sys/socket.h>
+        #include <net/if.h>
+        #endif]], [[
+        if_nametoindex("");
+    ]])],[
+        AC_MSG_RESULT([yes])
+        AC_DEFINE(HAVE_IF_NAMETOINDEX, [1],
+        [if_nametoindex is available])
+    ],[
+        AC_MSG_RESULT([no])
+])
+
 AC_ARG_ENABLE([libbsd],
     [AS_HELP_STRING([--enable-libbsd],
         [enable libbsd [default=auto]])],
@@ -938,6 +978,12 @@ LIBZMQ_CHECK_TCP_KEEPALIVE([
     AC_DEFINE([ZMQ_HAVE_TCP_KEEPALIVE],
         [1],
         [Whether TCP_KEEPALIVE is supported.])
+    ])
+
+LIBZMQ_CHECK_SO_PRIORITY([
+    AC_DEFINE([ZMQ_HAVE_SO_PRIORITY],
+        [1],
+        [Whether SO_PRIORITY is supported.])
     ])
 
 LIBZMQ_CHECK_GETRANDOM([
