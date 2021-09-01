@@ -32,6 +32,7 @@
 
 #include <stdlib.h>
 #include <vector>
+#include <algorithm>
 
 #include "macros.hpp"
 #include "stdint.hpp"
@@ -82,6 +83,7 @@ template <typename T, size_t S> class resizable_fast_vector_t
             _dynamic_buf = new (std::nothrow) std::vector<T>(nitems_);
             //  TODO since this function is called by a client, we could return errno == ENOMEM here
             alloc_assert (_dynamic_buf);
+			std::copy(_static_buf, _static_buf+S, _dynamic_buf->begin()); 
         }
     }
 
