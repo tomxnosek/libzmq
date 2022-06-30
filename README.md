@@ -1,6 +1,6 @@
 # ZeroMQ
 
-[![Build Status](https://travis-ci.com/zeromq/libzmq.svg?branch=master)](https://travis-ci.com/zeromq/libzmq)
+[![Build Status](https://github.com/zeromq/libzmq/actions/workflows/CI.yaml/badge.svg)](https://github.com/zeromq/libzmq/actions/workflows/CI.yaml)
 [![Build status](https://ci.appveyor.com/api/projects/status/e2ks424yrs1un3wt?svg=true)](https://ci.appveyor.com/project/zeromq/libzmq)
 [![Coverage Status](https://coveralls.io/repos/github/zeromq/libzmq/badge.svg?branch=master)](https://coveralls.io/github/zeromq/libzmq?branch=master)
 
@@ -23,7 +23,7 @@ of platforms, where libzmq has been successfully compiled on.
 
 | OS and version                         | Architecture            | Compiler and version          | Build system | Remarks                                                                                                                               |
 |----------------------------------------|-------------------------|-------------------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| Android NDK r20                        | arm, arm64, x86, x86_64 | llvm (see NDK)                | autotools    | DRAFT                                                                                                                                       |
+| Android NDK r24                        | arm, arm64, x86, x86_64 | llvm (see NDK)                | autotools    | DRAFT                                                                                                                                       |
 | Ubuntu 14.04.5 LTS (trusty)            | amd64                   | clang 5.0.0                   | autotools    | STABLE, extras: GSSAPI, PGM, NORM, C++98 mode only                                                                                    |
 | Ubuntu 14.04.5 LTS (trusty)            | amd64                   | gcc 4.8.4                     | autotools    | STABLE, DRAFT, extras: GSSAPI, PGM, NORM, TIPC, IPV6, also POLLER=poll, POLLER=select, also valgrind and address sanitizer executions |
 | Ubuntu 14.04.5 LTS (trusty)            | amd64                   | gcc 4.8.4                     | CMake 3.12.2 | STABLE                                                                                                                                |
@@ -76,7 +76,8 @@ case of a released version.
 | DragonFly BSD  | amd64             | gcc 8.3              | autotools    | 2018/08/07 git-72854e63 |         |
 | IBM i          | ppc64             | gcc 6.3              | autotools    | 2019/10/02 git-25320a3  |         |
 | QNX 7.0        | x86_64            | gcc 5.4.0            | CMake        | 4.3.2                   |         |
-
+| Windows 10     | ARM64             | Visual Studio 2019   | CMake        | 2021/11/15 git-2375ca8b |         |
+| Windows 10     | ARM64             | clang                | CMake        | 2021/11/15 git-2375ca8b |         |
 
 ### Supported platforms without known active users
 
@@ -103,7 +104,6 @@ Note: this list is incomplete and inaccurate and still needs some work.
 | OS and version | Architecture | Compiler and version | Remarks                                                                 |
 |----------------|--------------|----------------------|-------------------------------------------------------------------------|
 | QNX 6.3        | ?            | gcc 3.3.5            | see #3371, support was added by a user, but not contributed to upstream |
-| Windows 10     | ARM, ARM64   | Visual Studio 2017   | see #3366, probably only minor issues                                   |
 
 For more details, see [here](SupportedPlatforms.md).
 
@@ -176,7 +176,7 @@ Announcements mailing list: zeromq-announce@lists.zeromq.org
 Git repository: http://github.com/zeromq/libzmq
 
 ZeroMQ developers can also be found on the IRC channel #zeromq, on the
-Freenode network (irc.freenode.net).
+Libera Chat network (irc.libera.chat).
 
 ## License
 
