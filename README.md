@@ -3,6 +3,7 @@
 [![Build Status](https://github.com/zeromq/libzmq/actions/workflows/CI.yaml/badge.svg)](https://github.com/zeromq/libzmq/actions/workflows/CI.yaml)
 [![Build status](https://ci.appveyor.com/api/projects/status/e2ks424yrs1un3wt?svg=true)](https://ci.appveyor.com/project/zeromq/libzmq)
 [![Coverage Status](https://coveralls.io/repos/github/zeromq/libzmq/badge.svg?branch=master)](https://coveralls.io/github/zeromq/libzmq?branch=master)
+[![Conan Center](https://shields.io/conan/v/zeromq)](https://conan.io/center/zeromq)
 
 ## Welcome
 
@@ -23,7 +24,7 @@ of platforms, where libzmq has been successfully compiled on.
 
 | OS and version                         | Architecture            | Compiler and version          | Build system | Remarks                                                                                                                               |
 |----------------------------------------|-------------------------|-------------------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| Android NDK r24                        | arm, arm64, x86, x86_64 | llvm (see NDK)                | autotools    | DRAFT                                                                                                                                       |
+| Android NDK r25                        | arm, arm64, x86, x86_64 | llvm (see NDK)                | autotools    | DRAFT                                                                                                                                       |
 | Ubuntu 14.04.5 LTS (trusty)            | amd64                   | clang 5.0.0                   | autotools    | STABLE, extras: GSSAPI, PGM, NORM, C++98 mode only                                                                                    |
 | Ubuntu 14.04.5 LTS (trusty)            | amd64                   | gcc 4.8.4                     | autotools    | STABLE, DRAFT, extras: GSSAPI, PGM, NORM, TIPC, IPV6, also POLLER=poll, POLLER=select, also valgrind and address sanitizer executions |
 | Ubuntu 14.04.5 LTS (trusty)            | amd64                   | gcc 4.8.4                     | CMake 3.12.2 | STABLE                                                                                                                                |
@@ -154,6 +155,17 @@ For OSX users, packages are available via brew.
 
     brew install zeromq
 
+## Installation of package manager <a name="package manager"/>
+
+### vcpkg
+
+vcpkg is a full platform package manager, you can easily install libzmq via vcpkg.
+
+    git clone https://github.com/microsoft/vcpkg.git
+    ./bootstrap-vcpkg.bat # For powershell
+    ./bootstrap-vcpkg.sh # For bash
+    ./vcpkg install zeromq
+
 ## Build from sources <a name="build"/>
 
 To build from sources, see the INSTALL file included with the distribution.
@@ -180,27 +192,10 @@ Libera Chat network (irc.libera.chat).
 
 ## License
 
-The project license is specified in COPYING and COPYING.LESSER.
+The project license is specified in LICENSE.
 
 libzmq is free software; you can redistribute it and/or modify it under
-the terms of the GNU Lesser General Public License (LGPL) as published
-by the Free Software Foundation; either version 3 of the License, or
-(at your option) any later version.
-
-As a special exception, the Contributors give you permission to link
-this library with independent modules to produce an executable,
-regardless of the license terms of these independent modules, and to
-copy and distribute the resulting executable under terms of your choice,
-provided that you also meet, for each linked independent module, the
-terms and conditions of the license of that module. An independent
-module is a module which is not derived from or based on this library.
-If you modify this library, you must extend this exception to your
-version of the library.
-
-libzmq is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public
-License for more details.
+the terms of the Mozilla Public License Version 2.0.
 
 ## Contributing
 

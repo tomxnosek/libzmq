@@ -558,12 +558,12 @@ if test "x$have_gssapi_library" = "xyes"; then
 fi
 AM_CONDITIONAL(BUILD_GSSAPI, test "x$have_gssapi_library" = "xyes")
 
-# Select curve encryption library, defaults to tweetnacl
+# Select curve encryption library, defaults to disabled
 # To use libsodium instead, use --with-libsodium (must be installed)
 # To disable curve, use --disable-curve
 
 AC_ARG_WITH([libsodium],
-    [AS_HELP_STRING([--with-libsodium], [use libsodium instead of built-in tweetnacl [default=no]])])
+    [AS_HELP_STRING([--with-libsodium], [use libsodium [default=no]])])
 
 AS_IF([test "x$with_libsodium" = "xyes"], [
     PKG_CHECK_MODULES([sodium], [libsodium], [libsodium_found=yes], [
@@ -620,18 +620,11 @@ elif test "x$with_libsodium" = "xyes"; then
     esac
 
     PKGCFG_NAMES_PRIVATE="$PKGCFG_NAMES_PRIVATE libsodium"
-else
-    AC_MSG_NOTICE([Using tweetnacl for CURVE security])
-    AC_DEFINE(ZMQ_HAVE_CURVE, [1], [Using curve encryption])
-    AC_DEFINE(ZMQ_USE_TWEETNACL, [1], [Using tweetnacl for curve encryption])
-    curve_library="tweetnacl"
-    enable_curve="yes"
 fi
 
 AM_CONDITIONAL(ENABLE_CURVE_KEYGEN, test "x$enable_curve" = "xyes" -a "x$zmq_enable_curve_keygen" = "xyes")
 
 AM_CONDITIONAL(USE_LIBSODIUM, test "$curve_library" = "libsodium")
-AM_CONDITIONAL(USE_TWEETNACL, test "$curve_library" = "tweetnacl")
 AM_CONDITIONAL(HAVE_CURVE, test "x$curve_library" != "x")
 AM_CONDITIONAL(USE_WEPOLL, test "$poller" = "wepoll")
 
@@ -713,6 +706,11 @@ fi
 
 if test "x$have_pgm_library" = "xyes"; then
     AC_DEFINE(ZMQ_HAVE_OPENPGM, [1], [Have OpenPGM extension])
+    # When using CXX98 mode 'restrict will not be defined, so redefine it, as it
+    # is used in the PGM headers
+    if test "x$enable_force_CXX98_compat" = "xyes"; then
+        CPPFLAGS="-Drestrict=__restrict__ $CPPFLAGS"
+    fi
 fi
 
 AM_CONDITIONAL(HAVE_PGM, test "x$have_pgm_library" = "xyes")
